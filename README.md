@@ -11,3 +11,6 @@ We have a platform built for fetch raw sequencing data to our system. Once the d
 
 - 行，我会写WDL 了
 <img width="117" alt="Screenshot 2024-03-13 at 19 29 56" src="https://github.com/OOAAHH/SRA_Analysis_WDL/assets/19518905/2c6af976-a577-4580-a32e-300209fcf97e">
+
+
+- 这里有个典型的问题，不用python把cellranger包起来，就会报错，unKnow errors。
