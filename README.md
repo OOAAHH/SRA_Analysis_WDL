@@ -14,3 +14,5 @@ We have a platform built for fetch raw sequencing data to our system. Once the d
 
 
 - 这里有个典型的问题，不用python把cellranger包起来，就会报错，unKnow errors。
+
+# Dockerstore 一个用户才10个WDL？？？
