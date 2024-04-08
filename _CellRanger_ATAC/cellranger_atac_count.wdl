@@ -3,7 +3,7 @@ version 1.0
 # This is a WDL File                         #
 # This file was formed for CellRanger ATAC   #
 # Author: Sun Hao                            #
-# Date: YYYY/MM/DD 2024/04/8                 #
+# Date: YYYY/MM/DD 2024/04/08                #
 ##############################################
 
 task run_cellranger_count {
@@ -12,7 +12,8 @@ task run_cellranger_count {
         # An array of FASTQ file paths
         Array[File] fastq_file_paths
         # Tar.gz reference in this format
-        
+        File reference_genome_tar_gz
+        # Tar.gz cellranger_atac packges
         File cellranger_atac_tar_gz
         # Sample/Run ID, for this WDL,
         # we difined that each lanes' output files as a run: per run pre CellRanger job.
@@ -35,8 +36,7 @@ task run_cellranger_count {
         # A BED file to override peak caller
         File? peaks
 
-        File reference_genome_tar_gz
-        # Tar.gz cellranger_atac packges
+        
     }
     
     parameter_meta {
