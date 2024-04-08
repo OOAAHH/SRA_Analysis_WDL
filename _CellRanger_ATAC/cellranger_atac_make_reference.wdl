@@ -35,9 +35,9 @@ task run_cellranger_atac_make_reference {
         set -e
 
         mkdir cellranger_atac
-        tar -zxf ${cellranger_tar_gz} -C cellranger --strip-components 1
+        tar -zxf ${cellranger_atac_tar_gz} -C cellranger_atac --strip-components 1
         # Set PATH to include CellRanger binaries
-        export PATH=$(pwd)/cellranger:$PATH
+        export PATH=$(pwd)/cellranger_atac:$PATH
 
         python <<CODE
         with open("config.json", "w") as fout:
