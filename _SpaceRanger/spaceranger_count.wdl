@@ -81,7 +81,7 @@ workflow spaceranger_count {
         input:
             spaceranger_tar_gz = spaceranger_tar_gz,
             sample = sample,
-            run_id =  run_id
+            run_id =  run_id,
             fastq_file_paths = fastq_file_paths,
             genome = genome,
             probe_file = probe_file,
@@ -169,7 +169,7 @@ task run_spaceranger_count {
         export PATH=$(pwd)/spaceranger:$PATH
 
         mkdir -p genome_dir
-        tar xf ~{genome_file} -C genome_dir --strip-components 1
+        tar xf ~{genome} -C genome_dir --strip-components 1
 
         python <<CODE
         import os
