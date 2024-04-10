@@ -16,10 +16,12 @@ workflow spaceranger_count {
         File acronym_file
 
         # A reference genome name tar.gz file
-        String genome
+        File genome
 
         # Probe set for FFPE samples, choosing from human_probe_v1, human_probe_v2, mouse_probe_v1 or a user-provided csv file. Default to '', not FFPE
         String probe_set = ""
+        # if need
+        File? probe_file
         # Whether to filter the probe set using the "included" column of the probe set CSV. Default: true
         Boolean filter_probes = true
 
@@ -81,8 +83,7 @@ workflow spaceranger_count {
             sample = sample,
             run_id =  run_id
             fastq_file_paths = fastq_file_paths,
-            output_directory = output_directory,
-            genome_file = genome_file,
+            genome = genome,
             probe_file = probe_file,
             probe_set = probe_set,
             filter_probes = filter_probes,
@@ -117,9 +118,9 @@ task run_spaceranger_count {
         String sample
         Array[File] fastq_file_paths
         String run_id
-        File genome_file
-        File probe_file
-        String probe_set
+        File genome
+        String? probe_set
+        File? probe_file
         Boolean filter_probes
         File? image
         Array[File]? darkimage
@@ -154,6 +155,14 @@ task run_spaceranger_count {
         export TMPDIR=/tmp
         export BACKEND=~{backend}
 
+
+        if [ -n "~{probe_set}" ]; then
+            if [ ! -f "~{probe_file}" ]; then
+                echo "Error: probe_set is provided but probe_file is missing."
+                exit 1
+            fi
+        fi
+
         mkdir spaceranger
         tar -zxf ${spaceranger_tar_gz} -C spaceranger --strip-components 1
         # Set PATH to include SpaceRanger binaries
@@ -172,22 +181,17 @@ task run_spaceranger_count {
         fastq_dirs = set([os.path.dirname(f) for f in "~{sep='", "' fastq_file_paths}"])
         print(fastq_dirs)
 
-        call_args = ['spaceranger', 'count', '--id=~{run_id}, '--transcriptome=genome_dir', '--fastqs=' + ','.join(fastqs), '--sample=~{sample}', '--jobmode=local']
+        call_args = ['spaceranger', 'count', '--id=~{run_id}', '--transcriptome=genome_dir', '--fastqs=' + ','.join(fastqs), '--sample=~{sample}', '--jobmode=local']
 
         def not_null(input_file):
             return (input_file != '') and (os.path.basename(input_file) != 'null')
 
         def get_darkimages(darkimage, darkimagestr):
             darkimages = []
-            if darkimage != '':
-                darkimages = darkimage.split(';')
-            elif darkimagestr != '':
-                for i, file in enumerate(darkimagestr.split(';')):
-                    local_file = '_' + str(i) + '_' + os.path.basename(file)
-                    call_args = ['strato', 'cp', file, local_file]
-                    print(' '.join(call_args))
-                    check_call(call_args)
-                    darkimages.append(local_file)
+            if darkimage:            
+                darkimages = [file for file in darkimage]
+            elif darkimagestr:
+                darkimages = darkimagestr.split(';')
             return darkimages
 
         has_cyta = not_null('~{cytaimage}')
