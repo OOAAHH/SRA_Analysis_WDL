@@ -12,11 +12,8 @@ workflow spaceranger_count {
         # we difined that each lanes' output files as a run: per run pre CellRanger job.
         String run_id
 
-        # Referece index TSV
-        File acronym_file
-
         # A reference genome name tar.gz file
-        File genome
+        File reference_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/refdata-cellranger-GRCh38-3.0.0.tar.gz"
 
         # Probe set for FFPE samples, choosing from human_probe_v1, human_probe_v2, mouse_probe_v1 or a user-provided csv file. Default to '', not FFPE
         String probe_set = ""
@@ -73,8 +70,8 @@ workflow spaceranger_count {
         # Disk space in GB
         String disk_space = "500 GB"
 
-        # Backend
-        String backend
+        String spaceranger_version = "2.1.0"
+
     }
 
     call run_spaceranger_count {
@@ -83,7 +80,7 @@ workflow spaceranger_count {
             sample = sample,
             run_id =  run_id,
             fastq_file_paths = fastq_file_paths,
-            genome = genome,
+            reference_tar_gz = reference_tar_gz,
             probe_file = probe_file,
             probe_set = probe_set,
             filter_probes = filter_probes,
@@ -104,11 +101,10 @@ workflow spaceranger_count {
             secondary = secondary,
             r1_length = r1_length,
             r2_length = r2_length,
-
+            spaceranger_version = spaceranger_version,
             num_cpu = num_cpu,
             memory = memory,
             disk_space = disk_space,
-            backend = backend
     }
 }
 
@@ -118,7 +114,7 @@ task run_spaceranger_count {
         String sample
         Array[File] fastq_file_paths
         String run_id
-        File genome
+        File reference_tar_gz
         String? probe_set
         File? probe_file
         Boolean filter_probes
@@ -140,20 +136,17 @@ task run_spaceranger_count {
         Int? r1_length
         Int? r2_length
         String spaceranger_version
-        String docker_registry
-        String zones
+
         Int num_cpu
         String memory
         Int disk_space
-        Int preemptible
-        String awsQueueArn
-        String backend
+
     }
 
     command {
         set -e
         export TMPDIR=/tmp
-        export BACKEND=~{backend}
+        export BACKEND=BACKEND
 
 
         if [ -n "~{probe_set}" ]; then
@@ -169,7 +162,7 @@ task run_spaceranger_count {
         export PATH=$(pwd)/spaceranger:$PATH
 
         mkdir -p genome_dir
-        tar xf ~{genome} -C genome_dir --strip-components 1
+        tar xf ~{reference_tar_gz} -C genome_dir --strip-components 1
 
         python <<CODE
         import os
@@ -188,7 +181,7 @@ task run_spaceranger_count {
 
         def get_darkimages(darkimage, darkimagestr):
             darkimages = []
-            if darkimage:            
+            if darkimage:
                 darkimages = [file for file in darkimage]
             elif darkimagestr:
                 darkimages = darkimagestr.split(';')
