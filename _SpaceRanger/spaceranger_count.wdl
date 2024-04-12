@@ -78,7 +78,7 @@ workflow spaceranger_count {
         input:
             spaceranger_tar_gz = spaceranger_tar_gz,
             sample = sample,
-            run_id =  run_id,
+            run_id = run_id,
             fastq_file_paths = fastq_file_paths,
             reference_tar_gz = reference_tar_gz,
             probe_file = probe_file,
@@ -139,7 +139,7 @@ task run_spaceranger_count {
 
         Int num_cpu
         String memory
-        Int disk_space
+        String disk_space
 
     }
 
@@ -169,9 +169,11 @@ task run_spaceranger_count {
         import re
         import sys
         from subprocess import check_call, CalledProcessError, DEVNULL, STDOUT
-        from packaging import version
 
-        fastq_dirs = set([os.path.dirname(f) for f in "~{sep='", "' fastq_file_paths}"])
+
+        # Convert the WDL Array[File] input to a Python list
+        fastq_file_paths = ["${sep='","' fastq_file_paths}"]
+        fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
         print(fastq_dirs)
 
         call_args = ['spaceranger', 'count', '--id=~{run_id}', '--transcriptome=genome_dir', '--fastqs=' + ','.join(fastqs), '--sample=~{sample}', '--jobmode=local']
@@ -186,6 +188,18 @@ task run_spaceranger_count {
             elif darkimagestr:
                 darkimages = darkimagestr.split(';')
             return darkimages
+
+        def compare_versions(version1, version2):
+            v1 = [int(v) for v in version1.split('.')]
+            v2 = [int(v) for v in version2.split('.')]
+            for i in range(max(len(v1), len(v2))):
+                part1 = v1[i] if i < len(v1) else 0
+                part2 = v2[i] if i < len(v2) else 0
+                if part1 > part2:
+                    return 1
+                elif part1 < part2:
+                    return -1
+            return 0
 
         has_cyta = not_null('~{cytaimage}')
         if not_null('~{probe_file}'):
@@ -245,9 +259,16 @@ task run_spaceranger_count {
             if not_null('~{slidefile}'):
                 call_args.append('--slidefile=~{slidefile}')
 
+        #if not has_cyta:
+            #if not not_null('~{loupe_alignment}'):  # The argument '--reorient-images <true|false>' cannot be used with '--loupe-alignment <PATH>'
+                #if version.parse('~{spaceranger_version}') >= version.parse('2.0.0'):
+                    #call_args.append('--reorient-images=~{reorient_images}')
+                #elif '~{reorient_images}' == 'true':
+                    #call_args.append('--reorient-images')
+
         if not has_cyta:
             if not not_null('~{loupe_alignment}'):  # The argument '--reorient-images <true|false>' cannot be used with '--loupe-alignment <PATH>'
-                if version.parse('~{spaceranger_version}') >= version.parse('2.0.0'):
+                if compare_versions('~{spaceranger_version}', '2.0.0') >= 0:
                     call_args.append('--reorient-images=~{reorient_images}')
                 elif '~{reorient_images}' == 'true':
                     call_args.append('--reorient-images')
@@ -274,6 +295,7 @@ task run_spaceranger_count {
         print(' '.join(call_args))
         check_call(call_args)
         CODE
+
         tar -czvf ~{run_id}_outs.tar.gz ~{run_id}/outs
     }
 
@@ -286,7 +308,7 @@ task run_spaceranger_count {
     runtime {
         docker: "python:3.9.19-slim-bullseye"
         memory: memory
-        disks: disk_space
+        disk: disk_space
         cpu: num_cpu
     }
 }
