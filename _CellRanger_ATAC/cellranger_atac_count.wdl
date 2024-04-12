@@ -111,16 +111,17 @@ task run_cellranger_count {
         # Set PATH to include CellRanger-atac binaries
         export PATH=$(pwd)/cellranger_atac:$PATH
 
-        # Convert the WDL Array[File] input to a Python list
-        fastq_file_paths = ["${sep='","' fastq_file_paths}"]
-        fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
-        print(fastq_dirs)
+        # Unpack the reference genome
+        mkdir transcriptome_dir
+        tar xf ${reference_genome_tar_gz} -C transcriptome_dir --strip-components 1
 
         python <<CODE
         import os
         from subprocess import check_call
 
-        fastq_dirs = set([os.path.dirname(f) for f in "~{sep='", "' fastq_file_paths}"])
+        # Convert the WDL Array[File] input to a Python list
+        fastq_file_paths = ["${sep='","' fastq_file_paths}"]
+        fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
         print(fastq_dirs)
 
         call_args = ['cellranger-atac']
@@ -146,6 +147,7 @@ task run_cellranger_count {
             call_args.append('--nosecondary')
         else:
             print('We have secondary analysis here')
+        call_args.append('--disable-ui')
         print('Executing:', ' '.join(call_args))
         check_call(call_args)
         CODE
