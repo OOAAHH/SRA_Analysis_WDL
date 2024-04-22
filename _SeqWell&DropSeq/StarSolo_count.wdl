@@ -3,10 +3,10 @@ version 1.0
 task run_starsolo {
     input {
         Array[File] fastq_files
-        String barcode_read
-        String assay
-        File reference_tar_gz 
-        String genome_name 
+        String barcode_read = "read1"
+        String assay = "SeqWell"
+        File reference_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/refdata-cellranger-GRCh38-3.0.0.tar.gz"
+        String genome_name = "hg38_3.0.0"
         String? outSAMtype
         String? soloType
         File? soloCBwhitelist
@@ -32,9 +32,9 @@ task run_starsolo {
         String? soloOutFormatFeaturesGeneField3
         String? limitBAMsortRAM
         Int? outBAMsortingBinsN
-        String memory
-        Int num_cpu 
-        String disk_space
+        String memory = "240 GB"
+        Int num_cpu = 32
+        String disk_space = "300 GB"
     }
 
     command {
@@ -43,7 +43,7 @@ task run_starsolo {
         export BACKEND=/BACKEND
 
         mkdir genome_ref
-        tar -zxf "~{reference_tar_gz}" -C genome_ref --strip-components 1
+        tar -zxf "~{reference_tar_gz}" -C genome_ref --strip-components 8
         ls -l genome_ref
         mkdir results
 
@@ -51,6 +51,7 @@ task run_starsolo {
         import os, re
         from fnmatch import fnmatch
         from subprocess import check_call, CalledProcessError, DEVNULL, STDOUT
+        import pegasusio as io
 
         def generate_args_list(args_dict):
             res_list = list()
@@ -67,7 +68,7 @@ task run_starsolo {
         def remove_extra_space(s):
             return re.sub(' +', ' ', s.strip())
 
-        call_args = ['/home/STAR', '--genomeDir', 'genome_ref', '--runThreadN', '~{num_cpu}', '--outFileNamePrefix', 'result/']
+        call_args = ['/home/STAR', '--genomeDir', 'genome_ref', '--runThreadN', '~{num_cpu}', '--outFileNamePrefix', 'results/']
 
         barcode_read = '~{barcode_read}'
         args_dict = dict()
@@ -171,24 +172,26 @@ task run_starsolo {
         for feature in feature_list:
             if not feature in ['Gene', 'GeneFull', 'Velocyto']:
                 continue
-            prefix = "result/Solo.out/" + feature
+            prefix = "results/Solo.out/" + feature
             f_list = os.listdir(prefix)
             if 'raw' in f_list:
                 gen_10x_h5(prefix+'/raw', prefix+'/raw/'+feature, "~{genome_name}")
             if 'filtered' in f_list:
                 gen_10x_h5(prefix+'/filtered', prefix+'/filtered/'+feature, "~{genome_name}")
+
         CODE
-        ls ./
+
+        tar -czvf results_outs.tar.gz results
 
     }
 
     output {
-        # there may have h5 output?
         File output_bam = "results/Aligned.sortedByCoord.out.bam"
+        File output_tar_gz = "results_outs.tar.gz"
     }
 
     runtime {
-        docker: "ooaahhdocker/star2.7.11:latest"
+        docker: "ooaahhdocker/starsolo2:2.0"
         memory: memory
         disk: disk_space
         cpu: num_cpu
