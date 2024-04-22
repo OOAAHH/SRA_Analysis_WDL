@@ -53,8 +53,6 @@ workflow spaceranger_count {
         # Target panel CSV for targeted gene expression analysis
         File? target_panel
 
-        # If generate bam outputs
-        Boolean no_bam = false
         # Perform secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization). Default: false
         Boolean secondary = false
 
@@ -97,7 +95,6 @@ workflow spaceranger_count {
             reorient_images = reorient_images,
             loupe_alignment = loupe_alignment,
             target_panel = target_panel,
-            no_bam = no_bam,
             secondary = secondary,
             r1_length = r1_length,
             r2_length = r2_length,
@@ -131,7 +128,6 @@ task run_spaceranger_count {
         Boolean reorient_images
         File? loupe_alignment
         File? target_panel
-        Boolean no_bam
         Boolean secondary
         Int? r1_length
         Int? r2_length
@@ -176,7 +172,7 @@ task run_spaceranger_count {
         fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
         print(fastq_dirs)
 
-        call_args = ['spaceranger', 'count', '--id=~{run_id}', '--transcriptome=genome_dir', '--fastqs=' + ','.join(fastqs), '--sample=~{sample}', '--jobmode=local']
+        call_args = ['spaceranger', 'count', '--id=~{run_id}', '--transcriptome=genome_dir', '--fastqs=' + ','.join(list(fastq_dirs)), '--sample=~{sample}','--create-bam=true', '--jobmode=local']
 
         def not_null(input_file):
             return (input_file != '') and (os.path.basename(input_file) != 'null')
@@ -279,8 +275,6 @@ task run_spaceranger_count {
             # see here: https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/image-recommendations
             print("Automatic fiducial alignment of fluorescene images is not supported. Please provide manual alignment JSON files via the LoupeAlignment column in the sample sheet!", file = sys.stderr)
             sys.exit(1)
-        if '~{no_bam}' == 'true':
-            call_args.append('--no-bam')
         if '~{secondary}' != 'true':
             call_args.append('--nosecondary')
 
@@ -294,19 +288,27 @@ task run_spaceranger_count {
 
         print(' '.join(call_args))
         check_call(call_args)
+
+        # To h5ad
+        import scanpy as sc
+        adata = sc.read_10x_h5("~{run_id}/outs/filtered_feature_bc_matrix.h5")
+        adata.write_h5ad("~{run_id}/outs/filtered_feature_bc_matrix.h5ad")
+
         CODE
 
         tar -czvf ~{run_id}_outs.tar.gz ~{run_id}/outs
     }
 
     output {
-        String output_count_directory = "~{run_id}_outs.tar.gz"
-        String output_metrics_summary = "~{run_id}/outs/metrics_summary.csv"
-        String output_web_summary = "~~{run_id}/outs/web_summary.html"
+        File output_count_directory = "~{run_id}_outs.tar.gz"
+        File output_metrics_summary = "~{run_id}/outs/metrics_summary.csv"
+        File output_web_summary = "~{run_id}/outs/web_summary.html"
+        File output_bam = "~{run_id}/outs/possorted_genome_bam.bam"
+        File output_h5ad = "~{run_id}/outs/filtered_feature_bc_matrix.h5ad"
     }
 
     runtime {
-        docker: "python:3.9.19-slim-bullseye"
+        docker: "ooaahhdocker/py39_scanpy1-10-1"
         memory: memory
         disk: disk_space
         cpu: num_cpu
