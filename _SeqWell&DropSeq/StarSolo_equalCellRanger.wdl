@@ -3,9 +3,10 @@ version 1.0
 task run_starsolo {
     input {
         Array[File] fastq_files
+        String sample_ID
         String barcode_read = "read1"
         String assay = "SeqWell"
-        File reference_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/starsoloref.tar.gz"
+        File reference_tar_gz
         String genome_name = "hg38_3.0.0"
         String? outSAMtype
         String? soloType
@@ -14,7 +15,7 @@ task run_starsolo {
         Int? soloCBlen
         Int? soloUMIstart
         Int? soloUMIlen
-        Int? soloBarcodeReadLength
+        Int soloBarcodeReadLength = 0
         Int? soloBarcodeMate
         String? soloCBposition
         String? soloUMIposition
@@ -24,7 +25,7 @@ task run_starsolo {
         String? soloInputSAMattrBarcodeSeq
         String? soloInputSAMattrBarcodeQual
         String? soloStrand
-        String? soloFeatures
+        String? soloFeatures = "Gene"
         String? soloMultiMappers
         String? soloUMIdedup
         String? soloUMIfiltering
@@ -32,8 +33,8 @@ task run_starsolo {
         String? soloOutFormatFeaturesGeneField3
         String? limitBAMsortRAM
         Int? outBAMsortingBinsN
-        String memory = "240 GB"
-        Int num_cpu = 32
+        String memory = "24 GB"
+        Int num_cpu = 8
         String disk_space = "300 GB"
     }
 
@@ -52,7 +53,7 @@ task run_starsolo {
         from fnmatch import fnmatch
         from subprocess import check_call, CalledProcessError, DEVNULL, STDOUT
         import pegasusio as io
-
+        sample_id = "~{sample_ID}"
         def generate_args_list(args_dict):
             res_list = list()
             for k, v in args_dict.items():
@@ -168,12 +169,10 @@ task run_starsolo {
         print(' '.join(call_args))
         check_call(call_args)
 
-        # Generate 10x h5 format output
         def gen_10x_h5(file_path, outname, genome):
             print("Generate 10x h5 format file of "+file_path+"...")
             data = io.read_input(file_path, genome=genome)
             io.write_output(data, outname+'.h5')
-
         if '~{soloFeatures}' == '':
             feature_list = ['Gene']
         for feature in feature_list:
@@ -185,20 +184,25 @@ task run_starsolo {
                 gen_10x_h5(prefix+'/raw', prefix+'/raw/'+feature, "~{genome_name}")
             if 'filtered' in f_list:
                 gen_10x_h5(prefix+'/filtered', prefix+'/filtered/'+feature, "~{genome_name}")
-
+        import scanpy as sc
+        adata = sc.read_10x_h5("results/Solo.out/~{soloFeatures}/filtered/~{soloFeatures}.h5")
+        adata.obs_names = adata.obs_names.astype(str) + '_' + sample_id
+        output_path = "results/Solo.out/" + "~{soloFeatures}" + "/filtered/" + sample_id + ".h5ad"
+        adata.write_h5ad(output_path)
         CODE
 
         tar -czvf results_outs.tar.gz results
-
     }
 
     output {
         File output_bam = "results/Aligned.sortedByCoord.out.bam"
         File output_tar_gz = "results_outs.tar.gz"
+        File output_h5ad = "results/Solo.out/~{soloFeatures}/filtered/~{sample_ID}.h5ad"
+        File output_10x_h5 = "results/Solo.out/~{soloFeatures}/filtered/~{soloFeatures}.h5"
     }
 
     runtime {
-        docker: "ooaahhdocker/starsolo2:2.0"
+        docker: "ooaahhdocker/starsolo2:3.0"
         memory: memory
         disk: disk_space
         cpu: num_cpu
