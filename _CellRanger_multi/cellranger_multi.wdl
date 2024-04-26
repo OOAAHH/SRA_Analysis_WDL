@@ -1,133 +1,144 @@
 version 1.0
-# for cellranger multi
+
 task cellranger_multi {
     input {
-        # reference
+        String run_id
         File gene_expression_ref_tar_gz
         File VDJ_ref_tar_gz
-        # software
         File cellranger_tar_gz
 
-        # actually, its name
         String output_csv_path
-
-        # optional for cellranger multi
-        # chemistry, auto or v2,v3
         String chemistry = "auto"
-        # expect_cells
+
         Int? expect_cells
-        # force_cells
-        Int? expect_cells
-        # ~{check_library_compatibility}
+        Int? force_cells
         Boolean? check_library_compatibility
-        # include_introns
         Boolean? include_introns
+        Int? r1_length
+        Int? r2_length
 
-        # VDJ optional
-        Int? r1-length
-        Int? r2-length
-
-        # library optional
-        # fastqs
-        Array[File] GE_fastq_file_paths
-        Array[File] VDJ_fastq_file_paths
+        # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
+        # which means we need adjust our data model
+        Array[File]? GE_fastq_file_paths
+        Array[File]? VDJ_B_fastq_file_paths
+        Array[File]? VDJ_T_fastq_file_paths
+        # used for local, thats we defined you different file path, means directory.
+        String? GE_fastq_file_directory
+        String? VDJ_B_fastq_file_directory
+        String? VDJ_T_fastq_file_directory
 
         String GE_run_id
         Int GE_run_lanes = 1
 
         String? VDJ_B_run_id
-        Int? VDJ_B_run_lanes
+        Int? VDJ_B_run_lanes = 1
 
         String? VDJ_T_run_id
-        Int? VDJ_T_run_lanes
-    }
-    command {
+        Int? VDJ_T_run_lanes = 1
 
-        # Unpack the CellRanger software to a local directory
-        mkdir cellranger
+        String memory = "16 GB"
+        String disk_space = "100 GB"
+        Int cpu = 4
+    }
+
+    command <<<
+        set -e
+
+        mkdir -p cellranger
         tar -zxf ~{cellranger_tar_gz} -C cellranger --strip-components 1
-        # Set PATH to include CellRanger binaries
         export PATH=$(pwd)/cellranger:$PATH
 
-        # gene_expression_ref
-        mkdir -p genome_dir
+        mkdir -p genome_dir genome_VDJ_dir
         tar xf ~{gene_expression_ref_tar_gz} -C genome_dir --strip-components 1
-
-        # VDJ_expression_ref
-        mkdir -p genome_VDJ_dir
         tar xf ~{VDJ_ref_tar_gz} -C genome_VDJ_dir --strip-components 1
 
         python3 <<CODE
         import csv
-        csv_file = "~{output_csv_path}"
+        import os
+        from subprocess import check_call, CalledProcessError, DEVNULL, STDOUT
 
-        with open(csv_file, mode='w', newline='') as file:
+        # Setup CSV file for cellranger multi configuration
+        csv_file = "~{output_csv_path}"
+        with open(csv_file, 'w', newline='') as file:
             writer = csv.writer(file)
 
-            # Write the [gene-expression] section
+            # Gene-expression section
             writer.writerow(["[gene-expression]"])
             writer.writerow(["reference", "genome_dir"])
-                # optinal
             writer.writerow(["chemistry", "~{chemistry}"])
-            if '~{expect_cells}' =! '' :
-                writer.writerow(["expect-cells", "~{expect_cells}"])
+            if ~{defined(expect_cells)}:
+                writer.writerow(["expect-cells", ~{expect_cells}])
+            if ~{defined(force_cells)}:
+                writer.writerow(["force-cells", ~{force_cells}])
+            if ~{defined(check_library_compatibility)}:
+                writer.writerow(["check-library-compatibility", ~{check_library_compatibility}])
+            if ~{defined(include_introns)}:
+                writer.writerow(["include-introns", ~{include_introns}])
 
-            if '~{force_cells}' =! '' :
-                writer.writerow(["force-cells", "~{force_cells}"])
-
-            writer.writerow(["no-secondary", "true"])
-
-            if '~{check_library_compatibility}' =! '' :
-                writer.writerow(["check-library-compatibility", "~{check_library_compatibility}"])
-
-            if '~{include_introns}' =! '' :
-                writer.writerow(["include-introns", "~{include_introns}"])
-            #writer.writerow(["min-assignment-confidence", "~{min_assignment_confidence}"])
-            #writer.writerow(["cmo-set", "~{cmo_set}"])
-            #writer.writerow(["barcode-sample-assignment", "~{barcode_sample_assignment}"])
-
-            # VDJ
+            # VDJ section
             writer.writerow(["[vdj]"])
             writer.writerow(["reference", "genome_VDJ_dir"])
-                # optinal
-            if '~{r1-length}' =! '' :
-                writer.writerow(["r1-length", "~{r1-length}"])
-                writer.writerow(["r2-length", "~{r2-length}"])
+            if ~{defined(r1_length)}:
+                writer.writerow(["r1-length", ~{r1_length}])
+                writer.writerow(["r2-length", ~{r2_length}])
 
-            # Libraries
+            # Libraries section
             writer.writerow(["[libraries]"])
-
-                # Write the [gene-expression] section fastq_dirs
-                # Convert the WDL Array[File] input to a Python list
-            GE_fastq_file_paths = ["~{sep='","' GE_fastq_file_paths}"]
-            GE_fastq_dirs = set([os.path.dirname(f) for f in GE_fastq_file_paths])
-            print(GE_fastq_dirs)
-
-                # Write the [VDJ] section fastq_dirs
-                # Convert the WDL Array[File] input to a Python list
-            VDJ_fastq_file_paths = ["~{sep='","' VDJ_fastq_file_paths}"]
-            VDJ_fastq_dirs = set([os.path.dirname(f) for f in VDJ_fastq_file_paths])
-            print(VDJ_fastq_dirs)
-
             writer.writerow(["fastq_id", "fastqs", "lanes", "feature_types"])
-            writer.writerow(["~{GE_run_id}", "GE_fastq_dirs", "~{GE_run_lanes}", "Gene_Expression"])
-            #
-            if '~{VDJ_B_run_id}' =! '' :
-                writer.writerow(["~{VDJ_B_run_id}", "VDJ_fastq_dirs", "~{VDJ_B_run_lanes}", "VDJ-B"])
-            if '~{VDJ_T_run_id}' =! '' :
-                writer.writerow(["~{VDJ_T_run_id}", "VDJ_fastq_dirs", "~{VDJ_T_run_lanes}", "VDJ-T"])
-        CODE
 
-    }
+            # GEX part
+            # used in GUI
+            if ~{defined(GE_fastq_file_paths)}:
+                writer.writerow(["~{GE_run_id}", "~{sep=',' GE_fastq_file_paths}", "~{GE_run_lanes}", "Gene_Expression"])
+            # used for local
+            elif ~{defined(GE_fastq_file_directory)}:
+                writer.writerow(["~{GE_run_id}", "~{GE_fastq_file_directory}", "~{GE_run_lanes}", "Gene_Expression"])
+
+            # VDJ part
+            # VDJ B
+            if ~{defined(VDJ_B_run_id)}:
+                # used in GUI
+                if ~{defined(VDJ_B_fastq_file_paths)}:
+                    writer.writerow(["~{VDJ_B_run_id}", "~{sep=',' VDJ_B_fastq_file_paths}", "~{VDJ_B_run_lanes}", "VDJ-B"])
+                # used for local
+                elif ~{defined(VDJ_B_fastq_file_directory)}:
+                    writer.writerow(["~{VDJ_B_run_id}", "~{VDJ_B_fastq_file_directory}", "~{VDJ_B_run_lanes}", "VDJ-B"])
+            # VDJ T
+            if ~{defined(VDJ_T_run_id)}:
+                # used in GUI
+                if ~{defined(VDJ_T_fastq_file_paths)}:
+                    writer.writerow(["~{VDJ_T_run_id}", "~{sep=',' VDJ_T_fastq_file_paths}", "~{VDJ_T_run_lanes}", "VDJ-T"])
+                # used for local
+                elif ~{defined(VDJ_T_fastq_file_directory)}:
+                    writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
+
+        # RUN cellranger multi
+        call_args = ['cellranger', 'multi', '--jobmode=local','--disable-ui']
+
+        call_args.append('--localcores' + str(cpu))
+        call_args.append('--id' + str(run_id))
+        call_args.append('--csv' + ~{output_csv_path})
+
+        print(' '.join(call_args))
+        check_call(call_args)
+
+        # for output in .gz format
+        call_args = ['pigz', '-p', str(cpu), ~{run_id}/outs]
+        print(' '.join(call_args))
+        check_call(call_args)
+
+        CODE
+    >>>
 
     output {
         File csv = "~{output_csv_path}"
+        File multi_output = glob("./*.gz")
     }
 
     runtime {
-        docker: "ooaahhdocker/py39_scanpy1-10-1"
+        docker: "ooaahhdocker/python_pigz:1.0"
         memory: memory
         disk: disk_space
-        cpu: num_cpu
+        cpu: cpu
     }
 }
