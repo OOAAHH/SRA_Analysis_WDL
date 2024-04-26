@@ -3,7 +3,7 @@ version 1.0
 task cellranger_multi {
     input {
         String run_id
-        File gene_expression_ref_tar_gz
+        File gene_expression_ref_tar_gz 
         File VDJ_ref_tar_gz
         File cellranger_tar_gz
 
@@ -89,7 +89,9 @@ task cellranger_multi {
             # GEX part
             # used in GUI
             if ~{defined(GE_fastq_file_paths)}:
-                writer.writerow(["~{GE_run_id}", "~{sep=',' GE_fastq_file_paths}", "~{GE_run_lanes}", "Gene_Expression"])
+                fastq_file_paths = ["${sep='","' GE_fastq_file_paths"]
+                fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+                writer.writerow(["~{GE_run_id}", "fastq_dirs", "~{GE_run_lanes}", "Gene_Expression"])
             # used for local
             elif ~{defined(GE_fastq_file_directory)}:
                 writer.writerow(["~{GE_run_id}", "~{GE_fastq_file_directory}", "~{GE_run_lanes}", "Gene_Expression"])
@@ -99,7 +101,9 @@ task cellranger_multi {
             if ~{defined(VDJ_B_run_id)}:
                 # used in GUI
                 if ~{defined(VDJ_B_fastq_file_paths)}:
-                    writer.writerow(["~{VDJ_B_run_id}", "~{sep=',' VDJ_B_fastq_file_paths}", "~{VDJ_B_run_lanes}", "VDJ-B"])
+                    fastq_file_paths = ["${sep='","' VDJ_B_fastq_file_paths"]
+                    fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+                    writer.writerow(["~{VDJ_B_run_id}", "fastq_dirs", "~{VDJ_B_run_lanes}", "VDJ-B"])
                 # used for local
                 elif ~{defined(VDJ_B_fastq_file_directory)}:
                     writer.writerow(["~{VDJ_B_run_id}", "~{VDJ_B_fastq_file_directory}", "~{VDJ_B_run_lanes}", "VDJ-B"])
@@ -107,27 +111,24 @@ task cellranger_multi {
             if ~{defined(VDJ_T_run_id)}:
                 # used in GUI
                 if ~{defined(VDJ_T_fastq_file_paths)}:
-                    writer.writerow(["~{VDJ_T_run_id}", "~{sep=',' VDJ_T_fastq_file_paths}", "~{VDJ_T_run_lanes}", "VDJ-T"])
+                    fastq_file_paths = ["${sep='","' VDJ_T_fastq_file_paths"]
+                    fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+                    writer.writerow(["~{VDJ_T_run_id}", "fastq_dirs", "~{VDJ_T_run_lanes}", "VDJ-T"])
                 # used for local
                 elif ~{defined(VDJ_T_fastq_file_directory)}:
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
 
         # RUN cellranger multi
         call_args = ['cellranger', 'multi', '--jobmode=local','--disable-ui']
-
         call_args.append('--localcores' + str(cpu))
         call_args.append('--id' + str(run_id))
         call_args.append('--csv' + ~{output_csv_path})
-
         print(' '.join(call_args))
         check_call(call_args)
-
-        # for output in .gz format
-        call_args = ['pigz', '-p', str(cpu), ~{run_id}/outs]
-        print(' '.join(call_args))
-        check_call(call_args)
-
         CODE
+        # for output in .gz format
+        tar -c -I pigz -f ~{run_id}_outs.tar.gz ~{run_id}/outs
+
     >>>
 
     output {
