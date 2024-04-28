@@ -1,6 +1,7 @@
 # SRA_Analysis_WDL
 - An Auto Pipeline
-- Robustness 
+- Robustness
+- Designed for Bio-os
 
 Here, we need a script, a program or an other things, to meet our need. 
 
