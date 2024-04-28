@@ -36,9 +36,9 @@ task cellranger_multi {
         String? VDJ_T_run_id
         Int? VDJ_T_run_lanes = 1
 
-        String memory = "16 GB"
-        String disk_space = "100 GB"
-        Int cpu = 4
+        String memory = "235 GB"
+        String disk_space = "300 GB"
+        Int cpu = 32
     }
 
 
@@ -57,6 +57,10 @@ task cellranger_multi {
         import csv
         import os
         from subprocess import check_call, CalledProcessError, DEVNULL, STDOUT
+        fastqG_file_paths = "~{sep=',' GE_fastq_file_paths}"
+        fastqB_file_paths = "~{sep=',' VDJ_B_fastq_file_paths}"
+        fastqT_file_paths = "~{sep=',' VDJ_T_fastq_file_paths}"
+
 
         # Setup CSV file for cellranger multi configuration
         csv_file = "~{output_csv_path}"
@@ -89,10 +93,11 @@ task cellranger_multi {
 
             # GEX part
             # used in GUI
-            print("GEX")
-            if '~{GE_fastq_file_paths}' != '':
-                fastq_file_paths = ["~{sep='","' GE_fastq_file_paths"]
-                fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+            print("For GEX")
+            if fastqG_file_paths != "":
+                #fastq_file_paths = ["~{sep=',' GE_fastq_file_paths}"]
+                fastq_dirs = set([os.path.dirname(f) for f in fastqG_file_paths.split(',')])
+                #fastq_dirs = ','.join(fastq_dirs)
                 writer.writerow(["~{GE_run_id}", "fastq_dirs", "~{GE_run_lanes}", "Gene_Expression"])
             # used for local
             elif '~{GE_fastq_file_directory}' != '':
@@ -100,27 +105,30 @@ task cellranger_multi {
 
             # VDJ part
             # VDJ B
-            print("VDJ-B")
-            if '~{VDJ_B_run_id}' != '':
+            print("For VDJ-B")
+            if '~{VDJ_B_run_id}' != "":
                 # used in GUI
-                if '~{VDJ_B_fastq_file_paths}' != '':
-                    fastq_file_paths = ["~{sep='","' VDJ_B_fastq_file_paths"]
-                    fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+                if fastqB_file_paths != "":
+                    #fastq_file_paths = ["~{sep=',' VDJ_B_fastq_file_paths}"]
+                    fastq_dirs = set([os.path.dirname(f) for f in fastqB_file_paths.split(',')])
+                    #fastq_dirs = ','.join(fastq_dirs)
                     writer.writerow(["~{VDJ_B_run_id}", "fastq_dirs", "~{VDJ_B_run_lanes}", "VDJ-B"])
                 # used for local
                 elif '~{VDJ_B_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_B_run_id}", "~{VDJ_B_fastq_file_directory}", "~{VDJ_B_run_lanes}", "VDJ-B"])
             # VDJ T
-            print("VDJ-T")
-            if '~{VDJ_T_run_id}' != '':
+            print("For VDJ-T")
+            if '~{VDJ_T_run_id}' != "":
                 # used in GUI
-                if '~{VDJ_T_fastq_file_paths}' != '':
-                    fastq_file_paths = ["~{sep='","' VDJ_T_fastq_file_paths"]
-                    fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
+                if fastqT_file_paths != "":
+                    #fastq_file_paths = ["~{sep=',' VDJ_T_fastq_file_paths}"]
+                    fastq_dirs = set([os.path.dirname(f) for f in fastqT_file_paths.split(',')])
+                    #fastq_dirs = ','.join(fastq_dirs)
                     writer.writerow(["~{VDJ_T_run_id}", "fastq_dirs", "~{VDJ_T_run_lanes}", "VDJ-T"])
                 # used for local
                 elif '~{VDJ_T_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
+            print("the csv has been bulited")
         CODE
     >>>
 
