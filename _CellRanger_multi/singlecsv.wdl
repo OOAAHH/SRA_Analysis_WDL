@@ -41,7 +41,6 @@ task cellranger_multi {
         Int cpu = 32
     }
 
-
     command <<<
         set -e
 
@@ -52,6 +51,17 @@ task cellranger_multi {
         mkdir -p genome_dir genome_VDJ_dir
         tar xf ~{gene_expression_ref_tar_gz} -C genome_dir --strip-components 1
         tar xf ~{VDJ_ref_tar_gz} -C genome_VDJ_dir --strip-components 1
+        cd genome_dir
+        ls -l
+        gene_expression_ref_tar_gz=$(pwd)
+        echo $gene_expression_ref_tar_gz
+        cd ..
+        cd genome_VDJ_dir
+        ls -l
+        VDJ_ref_tar_gz=$(pwd)
+        echo $VDJ_ref_tar_gz
+        cd ..
+        ls -l
 
         python3 <<CODE
         import csv
@@ -60,8 +70,11 @@ task cellranger_multi {
         fastqG_file_paths = "~{sep=',' GE_fastq_file_paths}"
         fastqB_file_paths = "~{sep=',' VDJ_B_fastq_file_paths}"
         fastqT_file_paths = "~{sep=',' VDJ_T_fastq_file_paths}"
-
-
+        cpu="~{cpu}"
+        run_id="~{run_id}"
+        output_csv_path = "~{output_csv_path}"
+        gene_expression_ref_tar_gz = "${gene_expression_ref_tar_gz}"
+        VDJ_ref_tar_gz = "${VDJ_ref_tar_gz}"
         # Setup CSV file for cellranger multi configuration
         csv_file = "~{output_csv_path}"
         with open(csv_file, 'w', newline='') as file:
@@ -69,8 +82,9 @@ task cellranger_multi {
 
             # Gene-expression section
             writer.writerow(["[gene-expression]"])
-            writer.writerow(["reference", "genome_dir"])
+            writer.writerow(["reference", gene_expression_ref_tar_gz])
             writer.writerow(["chemistry", "~{chemistry}"])
+            #writer.writerow(["create-bam", "true"]) # this worked in in Cell Ranger v8.0+
             if '~{expect_cells}' != '':
                 writer.writerow(["expect-cells", ~{expect_cells}])
             if '~{force_cells}' != '':
@@ -82,7 +96,7 @@ task cellranger_multi {
 
             # VDJ section
             writer.writerow(["[vdj]"])
-            writer.writerow(["reference", "genome_VDJ_dir"])
+            writer.writerow(["reference", VDJ_ref_tar_gz])
             if '~{r1_length}' != '':
                 writer.writerow(["r1-length", ~{r1_length}])
                 writer.writerow(["r2-length", ~{r2_length}])
@@ -95,13 +109,13 @@ task cellranger_multi {
             # used in GUI
             print("For GEX")
             if fastqG_file_paths != "":
-                #fastq_file_paths = ["~{sep=',' GE_fastq_file_paths}"]
                 fastq_dirs = set([os.path.dirname(f) for f in fastqG_file_paths.split(',')])
-                #fastq_dirs = ','.join(fastq_dirs)
-                writer.writerow(["~{GE_run_id}", "fastq_dirs", "~{GE_run_lanes}", "Gene_Expression"])
+                fastq_dirs_str = ','.join(fastq_dirs)
+                writer.writerow(["~{GE_run_id}", fastq_dirs_str, "~{GE_run_lanes}", "Gene Expression"])
+                print(fastq_dirs_str)
             # used for local
             elif '~{GE_fastq_file_directory}' != '':
-                writer.writerow(["~{GE_run_id}", "~{GE_fastq_file_directory}", "~{GE_run_lanes}", "Gene_Expression"])
+                writer.writerow(["~{GE_run_id}", "~{GE_fastq_file_directory}", "~{GE_run_lanes}", "Gene Expression"])
 
             # VDJ part
             # VDJ B
@@ -111,8 +125,8 @@ task cellranger_multi {
                 if fastqB_file_paths != "":
                     #fastq_file_paths = ["~{sep=',' VDJ_B_fastq_file_paths}"]
                     fastq_dirs = set([os.path.dirname(f) for f in fastqB_file_paths.split(',')])
-                    #fastq_dirs = ','.join(fastq_dirs)
-                    writer.writerow(["~{VDJ_B_run_id}", "fastq_dirs", "~{VDJ_B_run_lanes}", "VDJ-B"])
+                    fastq_dirs_str = ','.join(fastq_dirs)
+                    writer.writerow(["~{VDJ_B_run_id}", fastq_dirs_str, "~{VDJ_B_run_lanes}", "VDJ-B"])
                 # used for local
                 elif '~{VDJ_B_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_B_run_id}", "~{VDJ_B_fastq_file_directory}", "~{VDJ_B_run_lanes}", "VDJ-B"])
@@ -123,13 +137,13 @@ task cellranger_multi {
                 if fastqT_file_paths != "":
                     #fastq_file_paths = ["~{sep=',' VDJ_T_fastq_file_paths}"]
                     fastq_dirs = set([os.path.dirname(f) for f in fastqT_file_paths.split(',')])
-                    #fastq_dirs = ','.join(fastq_dirs)
-                    writer.writerow(["~{VDJ_T_run_id}", "fastq_dirs", "~{VDJ_T_run_lanes}", "VDJ-T"])
+                    fastq_dirs_str = ','.join(fastq_dirs)
+                    writer.writerow(["~{VDJ_T_run_id}", fastq_dirs_str, "~{VDJ_T_run_lanes}", "VDJ-T"])
                 # used for local
                 elif '~{VDJ_T_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
             print("the csv has been bulited")
-        CODE
+            CODE
     >>>
 
     output {
