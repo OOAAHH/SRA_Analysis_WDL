@@ -17,5 +17,6 @@ What we have,now
   - 10X Cellranger VDJ WDL
   - 10X Spaceranger WDL
   - 10X Cellranger multi WDL (for GEX + VDJ-T/VDJ-B or both of them)
-  - SeqWell & Drop-seq & BD WDL
-  - SMART-seq WDL
+  - SeqWell & Drop-seq & BD WDL (STARsolo)
+  - SMART-seq WDL (STARsolo, too)
+`Praise the god of STAR`
