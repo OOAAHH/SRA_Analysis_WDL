@@ -89,34 +89,37 @@ task cellranger_multi {
 
             # GEX part
             # used in GUI
-            if ~{defined(GE_fastq_file_paths)}:
-                fastq_file_paths = ["${sep='","' GE_fastq_file_paths}"]
+            print("GEX")
+            if '~{GE_fastq_file_paths}' != '':
+                fastq_file_paths = ["~{sep='","' GE_fastq_file_paths"]
                 fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
                 writer.writerow(["~{GE_run_id}", "fastq_dirs", "~{GE_run_lanes}", "Gene_Expression"])
             # used for local
-            elif ~{defined(GE_fastq_file_directory)}:
+            elif '~{GE_fastq_file_directory}' != '':
                 writer.writerow(["~{GE_run_id}", "~{GE_fastq_file_directory}", "~{GE_run_lanes}", "Gene_Expression"])
 
             # VDJ part
             # VDJ B
-            if ~{defined(VDJ_B_run_id)}:
+            print("VDJ-B")
+            if '~{VDJ_B_run_id}' != '':
                 # used in GUI
-                if ~{defined(VDJ_B_fastq_file_paths)}:
-                    fastq_file_paths = ["${sep='","' VDJ_B_fastq_file_paths}"]
+                if '~{VDJ_B_fastq_file_paths}' != '':
+                    fastq_file_paths = ["~{sep='","' VDJ_B_fastq_file_paths"]
                     fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
                     writer.writerow(["~{VDJ_B_run_id}", "fastq_dirs", "~{VDJ_B_run_lanes}", "VDJ-B"])
                 # used for local
-                elif ~{defined(VDJ_B_fastq_file_directory)}:
+                elif '~{VDJ_B_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_B_run_id}", "~{VDJ_B_fastq_file_directory}", "~{VDJ_B_run_lanes}", "VDJ-B"])
             # VDJ T
-            if ~{defined(VDJ_T_run_id)}:
+            print("VDJ-T")
+            if '~{VDJ_T_run_id}' != '':
                 # used in GUI
-                if ~{defined(VDJ_T_fastq_file_paths)}:
-                    fastq_file_paths = ["${sep='","' VDJ_T_fastq_file_paths}"]
+                if '~{VDJ_T_fastq_file_paths}' != '':
+                    fastq_file_paths = ["~{sep='","' VDJ_T_fastq_file_paths"]
                     fastq_dirs = set([os.path.dirname(f) for f in fastq_file_paths])
                     writer.writerow(["~{VDJ_T_run_id}", "fastq_dirs", "~{VDJ_T_run_lanes}", "VDJ-T"])
                 # used for local
-                elif ~{defined(VDJ_T_fastq_file_directory)}:
+                elif '~{VDJ_T_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
         CODE
     >>>
