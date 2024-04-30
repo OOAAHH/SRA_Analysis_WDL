@@ -4,8 +4,8 @@ workflow cellranger_vdj {
     input {
         String sample_id
         Array[File]  fastq_file_paths
-        File cellranger_tar_gz
-        File reference_tar_gz 
+        File cellranger_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/cellranger-7.2.0.tar.gz"
+        File reference_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/analysis/sco5tra5eig49htini970/cellranger_vdj_create_reference/a37b5d72-994f-49a1-a28f-2569f03448f2/call-run_cellranger_vdj_create_reference/execution/dsadasd_ref.tar.gz"
         String disk_space = "500 GB"
         String memory = "120 GB"
         Int num_cpu = 8
@@ -74,7 +74,8 @@ task run_cellranger_vdj {
             '--reference', 'reference',
             '--fastqs', ','.join(list(fastq_dirs)),
             '--sample', "~{sample_id}",
-            '--chain', "~{chain}"
+            '--chain', "~{chain}",
+            '--disable-ui'
         ]
         
         if '~{denovo}' == 'True':
@@ -85,7 +86,7 @@ task run_cellranger_vdj {
         
         CODE
         
-        tar -czf "~{sample_id}_vdj_output.tar.gz" "~{sample_id}_vdj"
+        tar -czf "~{sample_id}_vdj_output.tar.gz" "~{sample_id}_vdj/outs"
     
     }
     
