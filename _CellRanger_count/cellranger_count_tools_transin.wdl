@@ -7,7 +7,7 @@ version 1.0
 task run_cellranger_count {
     input {
         Array[File] fastq_file_paths
-        File reference_genome_tar_gz = 
+        File reference_genome_tar_gz
         String run_id
         String sample
         String memory = "225 GB"
