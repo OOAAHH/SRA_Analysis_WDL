@@ -33,7 +33,6 @@ task ExtractFASTQ {
             'fasterq-dump',
             '--split-3',
             '-e', str(cpu),
-            '--include-technical',
             sra_file
         ]
         print('Executing:', ' '.join(call_args))
