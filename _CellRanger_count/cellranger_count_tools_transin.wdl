@@ -14,8 +14,8 @@ task run_cellranger_count {
         String disk_space = "300 GB"
         Int cpu = 8
         String chemistry = "auto"
-        String no_bam = "False"
-        String secondary = "False"
+        String no_bam = "False" # will changed in Cellranger version 8.0.0
+        String secondary = "True"
         # New input for CellRanger software package tar.gz
         File cellranger_tar_gz
     }
