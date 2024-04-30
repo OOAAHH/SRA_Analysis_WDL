@@ -95,7 +95,7 @@ task ExtractFASTQ {
 workflow ProcessSRA {
     input {
         File sra_file
-        File sratoolkit_tar_gz  = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/sratoolkit.3.1.0-ubuntu64(1).tar.gz" 
+        File sratoolkit_tar_gz  = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/sratoolkit.3.1.0-ubuntu64.tar.gz" 
         String sample
         String memory = "8 GB"
         String disk_space = "300 GB"
