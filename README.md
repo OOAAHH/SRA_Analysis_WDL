@@ -24,5 +24,7 @@ What we have,now
 
 Update
 -----------------------
+2024.4.29 ： Bugs fix
+  - For VDJ files(SRA), we have to use parameters: "`--split-file` combined with `--include-technologies`".
 2024.05.04 ：Added unplanned WDL files
   - 10X Cellranger multi WDL
