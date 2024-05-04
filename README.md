@@ -24,11 +24,19 @@ What we have,now
 
 Update
 -----------------------
-2024.4.26 : Add function
+
+2024.4.22 : Added STARsolo WDL files, which could used in BD&SeqWell&Dropseq, without umitools.
+  - ps. Set `--soloBarcodeReadLength=0` to skip the barcode and umi checks.
+
+2024.4.23 : Function added
+  - Increased the output of h5ad&bam files as much as possible.
+
+2024.4.26 : Function added
   - For local fastq files, I had added `cellranger_singleFile.wdl`.
 
 2024.4.28 ： Bugs fix
   - For VDJ files(SRA), we have to use parameters: "`--split-file` combined with `--include-technologies`".
+  - ps. For SpaceRanger, we need to use parameters `--split-3`. Therefore, in the case of 10X, we need to choose the appropriate workflow for the specific situation.
 
 2024.4.28 ：Added unplanned WDL files
   - 10X Cellranger multi WDL
