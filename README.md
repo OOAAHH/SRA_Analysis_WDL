@@ -20,3 +20,9 @@ What we have,now
   - SeqWell & Drop-seq & BD WDL (STARsolo)
   - SMART-seq WDL (STARsolo, too)
 `Praise the god of STAR`
+
+
+Update
+-----------------------
+  - 2024.05.04
+  - 10X Cellranger multi WDL
