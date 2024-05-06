@@ -32,7 +32,7 @@ task ExtractFASTQ {
         cpu = ~{cpu}
         call_args = [
             'fasterq-dump',
-            '--split-3',
+            '--split-files',
             '-e', str(cpu),
             '--include-technical',
             sra_file
