@@ -25,8 +25,27 @@ What we have,now
 Update
 -----------------------
 
+2024.4.11 : Resolving compatibility issues
+  - Lower versions of cellranger(2.9.6) are unable to handle newer 10X scRNA-seq data.
+  - Added a way to externally import the cellranger package
+
+2024.4.12 : The technical roadmap has been updated, and sra files are now reused using fasterq-dump
+  - Docker pull: ooaahhdocker/python_pigz:1.0 with python3.9/pigz, which meet fastq file to fastq compressed file fast implementation.
+
+2024.4.16 : Must come with full image information, slide number, etc.
+  - For spaceranger, complete image information is a must, and the data provided by some authors is incomplete.
+
 2024.4.22 : Added STARsolo WDL files, which could used in BD&SeqWell&Dropseq, without umitools.
   - ps. Set `--soloBarcodeReadLength=0` to skip the barcode and umi checks.
+  - Docker pull: ooaahhdocker/starsolo2:3.0, with python3.9/scanpy1.10.1/star2.7.11 inside.
+  - Attention!
+    - To make the agreement between STARsolo and CellRanger even more perfect, you can add
+    
+    `args_dict['--genomeSAsparseD'] = ['3']`
+    
+    - CellRanger 3.0.0 use advanced filtering based on the EmptyDrop algorithm developed by Lun et al. This algorithm calls extra cells compared to the knee filtering, allowing for       cells that have relatively fewer UMIs but are transcriptionally different from the ambient RNA. In STARsolo, this filtering can be activated by:
+    
+    `args_dict['--soloCellFilter'] =['EmptyDrops_CR']`
 
 2024.4.23 : Function added
   - Increased the output of h5ad&bam files as much as possible.
@@ -40,3 +59,6 @@ Update
 
 2024.4.28 ：Added unplanned WDL files
   - 10X Cellranger multi WDL
+
+2024.5.4 ： Updated naming logic for files
+  - The extent of the impact "SRA > fastq.gz"
