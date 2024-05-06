@@ -75,6 +75,10 @@ task ExtractFASTQ {
             r2_new_filename = f"{sample}_S1_{lane}_R2_001.fastq"
             shutil.copy2(r2_file, r2_new_filename)
             new_filenames.append(r2_new_filename)
+        for fastq in new_filenames:
+            command = ['pigz', '-p', str(cpu), fastq]
+            subprocess.check_call(command)
+            print(f"Successfully compressed: {fastq}")
         CODE
         ls -l
         ls ./
