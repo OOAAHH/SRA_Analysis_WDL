@@ -64,3 +64,6 @@ Update
 
 2024.5.4 ： Updated naming logic for files
   - The extent of the impact "SRA > fastq.gz"
+
+2024.5.9 ： multi need to set NA as []
+  - Array[File] Cannot accept input with an empty string, use [] as insted.
