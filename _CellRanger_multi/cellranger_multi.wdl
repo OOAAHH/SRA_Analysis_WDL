@@ -1,101 +1,5 @@
 version 1.0
 
-workflow cellrangerWorkflow {
-    input {
-        String run_id
-        File gene_expression_ref_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/refdata-cellranger-GRCh38-3.0.0.tar.gz"
-        File VDJ_ref_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/analysis/sco5tra5eig49htini970/cellranger_vdj_create_reference/a37b5d72-994f-49a1-a28f-2569f03448f2/call-run_cellranger_vdj_create_reference/execution/dsadasd_ref.tar.gz"
-        File cellranger_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/cellranger-7.2.0.tar.gz"
-
-        String output_csv_path
-        String? chemistry = "auto"
-
-        Int? expect_cells
-        Int? force_cells
-        Boolean? check_library_compatibility
-        Boolean? include_introns
-        Int? r1_length
-        Int? r2_length
-
-        # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
-        # which means we need adjust our data model
-        Array[File]? GE_fastq_file_paths
-        # 定义为可选的字符串，默认为空字符串
-        String? VDJ_B_fastq_file_paths = ""
-        String? VDJ_T_fastq_file_paths = ""
-        # used for local, thats we defined you different file path, means directory.
-        String? GE_fastq_file_directory
-        String? VDJ_B_fastq_file_directory
-        String? VDJ_T_fastq_file_directory
-
-        String GE_run_id
-        Int GE_run_lanes = 1
-
-        String? VDJ_B_run_id
-        Int? VDJ_B_run_lanes = 1
-
-        String? VDJ_T_run_id
-        Int? VDJ_T_run_lanes = 1
-
-        String memory = "235 GB"
-        String disk_space = "300 GB"
-        Int cpu = 32
-    }
-
-    #Array[File] VDJ_B_files = default(VDJ_B_fastq_file_paths, [])
-    #Array[File] VDJ_T_files = default(VDJ_T_fastq_file_paths, [])
-
-
-    # 将字符串拆分为Array[File?]
-    Array[File?] VDJ_B_temp = if VDJ_B_fastq_file_paths == "" then [] else split(VDJ_B_fastq_file_paths, ",") 
-    Array[File?] VDJ_T_temp = if VDJ_T_fastq_file_paths == "" then [] else split(VDJ_T_fastq_file_paths, ",")
-
-    # 使用select_all确保数组非空
-    Array[File] VDJ_B_files = select_all(VDJ_B_temp)
-    Array[File] VDJ_T_files = select_all(VDJ_T_temp)
-    
-    call cellranger_multi {
-        input:
-            VDJ_B_fastq_file_paths = VDJ_B_files,
-            VDJ_T_fastq_file_paths = VDJ_T_files,
-            run_id = run_id,
-            gene_expression_ref_tar_gz = gene_expression_ref_tar_gz,
-            VDJ_ref_tar_gz = VDJ_ref_tar_gz,
-            cellranger_tar_gz = cellranger_tar_gz,
-    
-            output_csv_path = output_csv_path,
-            chemistry = chemistry,
-    
-            expect_cells = expect_cells,
-            force_cells = force_cells,
-            check_library_compatibility = check_library_compatibility,
-            include_introns = include_introns,
-            r1_length = r1_length,
-            r2_length = r2_length,
-    
-            # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
-            # which means we need adjust our data model,
-            GE_fastq_file_paths = GE_fastq_file_paths,
-    
-            # used for local, thats we defined you different file path, means directory.
-            GE_fastq_file_directory = GE_fastq_file_directory,
-            VDJ_B_fastq_file_directory = VDJ_B_fastq_file_directory,
-            VDJ_T_fastq_file_directory = VDJ_T_fastq_file_directory,
-    
-            GE_run_id = GE_run_id,
-            GE_run_lanes = GE_run_lanes,
-    
-            VDJ_B_run_id = VDJ_B_run_id,
-            VDJ_B_run_lanes = VDJ_B_run_lanes,
-    
-            VDJ_T_run_id = VDJ_T_run_id,
-            VDJ_T_run_lanes = VDJ_T_run_lanes,
-    
-            memory = memory,
-            disk_space = disk_space,
-            cpu = cpu,
-    }
-}
 task cellranger_multi {
     input {
         String run_id
@@ -116,8 +20,8 @@ task cellranger_multi {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        String? VDJ_B_fastq_file_paths = ""
-        String? VDJ_T_fastq_file_paths = ""
+        Array[File]? VDJ_B_fastq_file_paths
+        Array[File]? VDJ_T_fastq_file_paths
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
