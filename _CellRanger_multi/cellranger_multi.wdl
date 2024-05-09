@@ -20,8 +20,8 @@ workflow cellrangerWorkflow {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        Array[File?]? VDJ_B_fastq_file_paths
-        Array[File?]? VDJ_T_fastq_file_paths
+        Array[File] VDJ_B_fastq_file_paths
+        Array[File] VDJ_T_fastq_file_paths
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
@@ -40,9 +40,11 @@ workflow cellrangerWorkflow {
         String disk_space = "300 GB"
         Int cpu = 32
     }
-    # select_all. Make sure the array is initialized to be nonempty.
-    Array[File] VDJ_B_files = select_all(VDJ_B_fastq_file_paths)
-    Array[File] VDJ_T_files = select_all(VDJ_T_fastq_file_paths)
+
+    #Array[File] VDJ_B_files = default(VDJ_B_fastq_file_paths, [])
+    #Array[File] VDJ_T_files = default(VDJ_T_fastq_file_paths, [])
+    Array[File] VDJ_B_files = if length(VDJ_B_fastq_file_paths) > 0 then VDJ_B_fastq_file_paths else []
+    Array[File] VDJ_T_files = if length(VDJ_B_fastq_file_paths) > 0 then VDJ_B_fastq_file_paths else []
 
     call cellranger_multi {
         input:
@@ -106,8 +108,8 @@ task cellranger_multi {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        Array[File]? VDJ_B_fastq_file_paths
-        Array[File]? VDJ_T_fastq_file_paths
+        Array[File] VDJ_B_fastq_file_paths
+        Array[File] VDJ_T_fastq_file_paths
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
