@@ -20,8 +20,9 @@ workflow cellrangerWorkflow {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        Array[File] VDJ_B_fastq_file_paths
-        Array[File] VDJ_T_fastq_file_paths
+        # 定义为可选的字符串，默认为空字符串
+        String? VDJ_B_fastq_file_paths = ""
+        String? VDJ_T_fastq_file_paths = ""
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
@@ -43,9 +44,16 @@ workflow cellrangerWorkflow {
 
     #Array[File] VDJ_B_files = default(VDJ_B_fastq_file_paths, [])
     #Array[File] VDJ_T_files = default(VDJ_T_fastq_file_paths, [])
-    Array[File] VDJ_B_files = if length(VDJ_B_fastq_file_paths) > 0 then VDJ_B_fastq_file_paths else []
-    Array[File] VDJ_T_files = if length(VDJ_B_fastq_file_paths) > 0 then VDJ_B_fastq_file_paths else []
 
+
+    # 将字符串拆分为Array[File?]
+    Array[File?] VDJ_B_temp = if VDJ_B_fastq_file_paths == "" then [] else split(VDJ_B_fastq_file_paths, ",") 
+    Array[File?] VDJ_T_temp = if VDJ_T_fastq_file_paths == "" then [] else split(VDJ_T_fastq_file_paths, ",")
+
+    # 使用select_all确保数组非空
+    Array[File] VDJ_B_files = select_all(VDJ_B_temp)
+    Array[File] VDJ_T_files = select_all(VDJ_T_temp)
+    
     call cellranger_multi {
         input:
             VDJ_B_fastq_file_paths = VDJ_B_files,
@@ -108,8 +116,8 @@ task cellranger_multi {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        Array[File] VDJ_B_fastq_file_paths
-        Array[File] VDJ_T_fastq_file_paths
+        String? VDJ_B_fastq_file_paths = ""
+        String? VDJ_T_fastq_file_paths = ""
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
