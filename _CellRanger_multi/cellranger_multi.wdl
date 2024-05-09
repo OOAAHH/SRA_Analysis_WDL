@@ -48,42 +48,42 @@ workflow cellrangerWorkflow {
         input:
             VDJ_B_fastq_file_paths = VDJ_B_files,
             VDJ_T_fastq_file_paths = VDJ_T_files,
-            run_id = run_id
-            gene_expression_ref_tar_gz = gene_expression_ref_tar_gz
-            VDJ_ref_tar_gz = VDJ_ref_tar_gz
-            cellranger_tar_gz = cellranger_tar_gz
+            run_id = run_id,
+            gene_expression_ref_tar_gz = gene_expression_ref_tar_gz,
+            VDJ_ref_tar_gz = VDJ_ref_tar_gz,
+            cellranger_tar_gz = cellranger_tar_gz,
     
-            output_csv_path = output_csv_path
-            chemistry = chemistry
+            output_csv_path = output_csv_path,
+            chemistry = chemistry,
     
-            expect_cells = expect_cells
-            force_cells = force_cells
-            check_library_compatibility = check_library_compatibility
-            include_introns = include_introns
-            r1_length = r1_length
-            r2_length = r2_length
+            expect_cells = expect_cells,
+            force_cells = force_cells,
+            check_library_compatibility = check_library_compatibility,
+            include_introns = include_introns,
+            r1_length = r1_length,
+            r2_length = r2_length,
     
             # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
-            # which means we need adjust our data model
-            GE_fastq_file_paths = GE_fastq_file_paths
+            # which means we need adjust our data model,
+            GE_fastq_file_paths = GE_fastq_file_paths,
     
             # used for local, thats we defined you different file path, means directory.
-            GE_fastq_file_directory = GE_fastq_file_directory
-            VDJ_B_fastq_file_directory = VDJ_B_fastq_file_directory
-            VDJ_T_fastq_file_directory = VDJ_T_fastq_file_directory
+            GE_fastq_file_directory = GE_fastq_file_directory,
+            VDJ_B_fastq_file_directory = VDJ_B_fastq_file_directory,
+            VDJ_T_fastq_file_directory = VDJ_T_fastq_file_directory,
     
-            GE_run_id = GE_run_id
-            GE_run_lanes = GE_run_lanes
+            GE_run_id = GE_run_id,
+            GE_run_lanes = GE_run_lanes,
     
-            VDJ_B_run_id = VDJ_B_run_id
-            VDJ_B_run_lanes = VDJ_B_run_lanes
+            VDJ_B_run_id = VDJ_B_run_id,
+            VDJ_B_run_lanes = VDJ_B_run_lanes,
     
-            VDJ_T_run_id = VDJ_T_run_id
-            VDJ_T_run_lanes = VDJ_T_run_lanes
+            VDJ_T_run_id = VDJ_T_run_id,
+            VDJ_T_run_lanes = VDJ_T_run_lanes,
     
-            memory = memory
-            disk_space = disk_space
-            cpu = cpu
+            memory = memory,
+            disk_space = disk_space,
+            cpu = cpu,
     }
 }
 task cellranger_multi {
