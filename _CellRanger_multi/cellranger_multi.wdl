@@ -20,8 +20,8 @@ workflow cellrangerWorkflow {
         # used in GUI, an array of you files, an sample with this.GE and this.VDJ.
         # which means we need adjust our data model
         Array[File]? GE_fastq_file_paths
-        Array[File]? VDJ_B_fastq_file_paths
-        Array[File]? VDJ_T_fastq_file_paths
+        Array[File?]? VDJ_B_fastq_file_paths
+        Array[File?]? VDJ_T_fastq_file_paths
         # used for local, thats we defined you different file path, means directory.
         String? GE_fastq_file_directory
         String? VDJ_B_fastq_file_directory
