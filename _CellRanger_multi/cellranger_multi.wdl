@@ -45,7 +45,7 @@ workflow cellrangerWorkflow {
     Array[File] VDJ_T_files = select_all(VDJ_T_fastq_file_paths)
 
     call cellranger_multi {
-        input{
+        input:
             VDJ_B_fastq_file_paths = VDJ_B_files,
             VDJ_T_fastq_file_paths = VDJ_T_files,
             run_id = run_id
@@ -84,8 +84,6 @@ workflow cellrangerWorkflow {
             memory = memory
             disk_space = disk_space
             cpu = cpu
-
-        }
     }
 }
 task cellranger_multi {
