@@ -3,12 +3,12 @@ version 1.0
 task cellranger_multi {
     input {
         String run_id
-        File gene_expression_ref_tar_gz
-        File VDJ_ref_tar_gz
-        File cellranger_tar_gz
+        File gene_expression_ref_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/RAW/refdata-cellranger-GRCh38-3.0.0.tar.gz"
+        File VDJ_ref_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/analysis/sco5tra5eig49htini970/cellranger_vdj_create_reference/a37b5d72-994f-49a1-a28f-2569f03448f2/call-run_cellranger_vdj_create_reference/execution/dsadasd_ref.tar.gz"
+        File cellranger_tar_gz = "s3://bioos-wcnjupodeig44rr6t02v0/Example_10X_data/cellranger-7.2.0.tar.gz"
 
         String output_csv_path
-        String chemistry = "auto"
+        String? chemistry = "auto"
 
         Int? expect_cells
         Int? force_cells
@@ -39,7 +39,9 @@ task cellranger_multi {
         String memory = "235 GB"
         String disk_space = "300 GB"
         Int cpu = 32
+
     }
+
 
     command <<<
         set -e
@@ -143,11 +145,13 @@ task cellranger_multi {
                 elif '~{VDJ_T_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
             print("the csv has been bulited")
+
         CODE
     >>>
 
     output {
         File csv = "~{output_csv_path}"
+        File multi_output = "~{run_id}_outs.tar.gz"
     }
 
     runtime {
