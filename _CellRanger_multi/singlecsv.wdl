@@ -151,7 +151,6 @@ task cellranger_multi {
 
     output {
         File csv = "~{output_csv_path}"
-        File multi_output = "~{run_id}_outs.tar.gz"
     }
 
     runtime {
