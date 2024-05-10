@@ -143,7 +143,7 @@ task cellranger_multi {
                 elif '~{VDJ_T_fastq_file_directory}' != '':
                     writer.writerow(["~{VDJ_T_run_id}", "~{VDJ_T_fastq_file_directory}", "~{VDJ_T_run_lanes}", "VDJ-T"])
             print("the csv has been bulited")
-            CODE
+        CODE
     >>>
 
     output {
