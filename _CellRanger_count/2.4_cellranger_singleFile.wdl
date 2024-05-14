@@ -74,9 +74,9 @@ task run_cellranger_count {
 
     output {
         File output_count_directory = "~{run_id}_outs.tar.gz"
-        File output_metrics_summary = "~{run_id}/outs/~{sample}_metrics_summary.csv"
-        File output_web_summary = "~{run_id}/outs/~{sample}_web_summary.html"
-        File output_bam = "~{run_id}/outs/~{sample}_possorted_genome_bam.bam"
+        File output_metrics_summary = "~{run_id}/outs/metrics_summary.csv"
+        File output_web_summary = "~{run_id}/outs/web_summary.html"
+        File output_bam = "~{run_id}/outs/possorted_genome_bam.bam"
         File output_h5ad = "~{run_id}/outs/~{sample}_filtered_feature_bc_matrix.h5ad"
     }
 
